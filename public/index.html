@@ -421,11 +421,13 @@
                     }
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
                 const data = await response.json();
+
+                if (!response.ok) {
+                    // Include the error message from the API
+                    const errorMsg = data.message || data.error || `HTTP error! status: ${response.status}`;
+                    throw new Error(errorMsg);
+                }
                 const bookings = data.items || [];
 
                 // Update last update time
@@ -463,6 +465,7 @@
 
             } catch (error) {
                 console.error('Error fetching bookings:', error);
+
                 container.innerHTML = `
                     <div class="error-message">
                         Kunne ikke laste bestillinger<br>
