@@ -16,10 +16,7 @@ async function fetchTrips(token) {
   const requestBody = {
     centralCode: centralCode,
     mode: 0, // Mode 0 for pending/active trips
-    objValues: {
-      minPickupTime: minPickupTime.toISOString(),
-      maxPickupTime: maxPickupTime.toISOString()
-    }
+    objValues: {}  // Mode 0 might not need time filters
   };
 
   console.log('Fetching trips with body:', JSON.stringify(requestBody, null, 2));
