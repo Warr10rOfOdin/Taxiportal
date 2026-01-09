@@ -1,29 +1,7 @@
 const fetch = require('node-fetch');
 
-// Import the auth handler to get valid token
-const getAuth = require('./auth');
-
-async function getValidToken() {
-  // Simulate a request to auth endpoint
-  return new Promise((resolve, reject) => {
-    const mockReq = { method: 'GET' };
-    const mockRes = {
-      setHeader: () => {},
-      status: (code) => ({
-        json: (data) => {
-          if (code === 200) {
-            resolve(data.token);
-          } else {
-            reject(new Error(data.message));
-          }
-        },
-        end: () => {}
-      })
-    };
-
-    getAuth(mockReq, mockRes);
-  });
-}
+// Import the getValidToken function from auth module
+const { getValidToken } = require('./auth');
 
 async function fetchTrips(token) {
   const { TAXI4U_CENTRAL_CODE } = process.env;
@@ -81,10 +59,10 @@ module.exports = async (req, res) => {
 
   try {
     // Get valid token (will use cached token if still valid)
-    const token = await getValidToken();
+    const tokenData = await getValidToken();
 
     // Fetch trips using the token
-    const tripsData = await fetchTrips(token);
+    const tripsData = await fetchTrips(tokenData.token);
 
     res.status(200).json(tripsData);
   } catch (error) {
