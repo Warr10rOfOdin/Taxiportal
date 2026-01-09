@@ -41,30 +41,55 @@ async function fetchTrips(token) {
   const data = await response.json();
   console.log(`Fetched ${Array.isArray(data) ? data.length : 0} trips from API`);
 
+  // Log first trip for debugging
+  if (Array.isArray(data) && data.length > 0) {
+    console.log('Sample trip data:', JSON.stringify(data[0], null, 2));
+  }
+
   // Transform API response to match frontend expectations
   const trips = Array.isArray(data) ? data : [];
   const transformedTrips = trips.map(trip => {
     // Get first passenger for address info (most trips have one passenger)
     const firstPassenger = trip.passengers && trip.passengers[0];
 
+    // Build pickup address from available fields
+    let pickupAddress = '';
+    if (firstPassenger) {
+      const parts = [
+        firstPassenger.fromStreet,
+        firstPassenger.fromPostalCode,
+        firstPassenger.fromCity
+      ].filter(Boolean);
+      pickupAddress = parts.join(', ');
+    }
+
+    // Build dropoff address from available fields
+    let dropoffAddress = '';
+    if (firstPassenger) {
+      const parts = [
+        firstPassenger.toStreet,
+        firstPassenger.toPostalCode,
+        firstPassenger.toCity
+      ].filter(Boolean);
+      dropoffAddress = parts.join(', ');
+    }
+
     return {
       ...trip,
       // Add computed fields for frontend
-      pickupAddress: firstPassenger
-        ? `${firstPassenger.fromStreet || ''}, ${firstPassenger.fromCity || ''}`.trim()
-        : '',
-      dropoffAddress: firstPassenger
-        ? `${firstPassenger.toStreet || ''}, ${firstPassenger.toCity || ''}`.trim()
-        : '',
+      pickupAddress: pickupAddress || 'Ikke angitt',
+      dropoffAddress: dropoffAddress || 'Ikke angitt',
       comment: trip.messageToCar || '',
       // Transform passenger fields to match frontend
       passengers: (trip.passengers || []).map(p => ({
         ...p,
-        name: p.clientName,
+        name: p.clientName || p.taxiAccountNo || 'Ukjent',
         phoneNo: p.tel
       }))
     };
   });
+
+  console.log('Sample transformed trip:', JSON.stringify(transformedTrips[0], null, 2));
 
   return {
     items: transformedTrips
