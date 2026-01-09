@@ -7,26 +7,18 @@ async function fetchTrips(token) {
   const { TAXI4U_CENTRAL_CODE } = process.env;
 
   const now = new Date();
-  const minPickupTime = new Date(now.getTime() - 1 * 60 * 60 * 1000); // 1 hour ago
-  const maxPickupTime = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours ahead
 
+  // Use the documented /api/triplists endpoint for pending trips
   const requestBody = {
-    minPickupTime: minPickupTime.toISOString(),
-    maxPickupTime: maxPickupTime.toISOString(),
-    centralcode: TAXI4U_CENTRAL_CODE || 'VS',
-    tripstatuses: [
-      "UnderSending",
-      "Sent",
-      "OnRoute",
-      "Arrived",
-      "POB",
-      "WaitingToPOB"
-    ]
+    centralCode: TAXI4U_CENTRAL_CODE || 'VS',
+    listType: 'pending', // Get pending/active trips
+    fromTime: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(),
+    toTime: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString()
   };
 
   console.log('Fetching trips with body:', JSON.stringify(requestBody, null, 2));
 
-  const response = await fetch('https://api.taxi4u.cab/api/Trips', {
+  const response = await fetch('https://api.taxi4u.cab/api/triplists', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -41,9 +33,12 @@ async function fetchTrips(token) {
   }
 
   const data = await response.json();
-  console.log(`Fetched ${data.items?.length || 0} trips`);
+  console.log(`Fetched trips from API`);
 
-  return data;
+  // Normalize response to match expected format
+  return {
+    items: Array.isArray(data) ? data : (data.items || [])
+  };
 }
 
 module.exports = async (req, res) => {

@@ -7,23 +7,22 @@ let tokenCache = {
 };
 
 async function fetchToken() {
-  const { TAXI4U_USERNAME, TAXI4U_PASSWORD, TAXI4U_CENTRAL_CODE } = process.env;
+  const { TAXI4U_USERNAME, TAXI4U_PASSWORD } = process.env;
 
-  if (!TAXI4U_USERNAME || !TAXI4U_PASSWORD || !TAXI4U_CENTRAL_CODE) {
-    throw new Error('Missing required environment variables: TAXI4U_USERNAME, TAXI4U_PASSWORD, TAXI4U_CENTRAL_CODE');
+  if (!TAXI4U_USERNAME || !TAXI4U_PASSWORD) {
+    throw new Error('Missing required environment variables: TAXI4U_USERNAME, TAXI4U_PASSWORD');
   }
 
   console.log('Fetching new token from API');
 
-  const response = await fetch('https://api.taxi4u.cab/api/Auth', {
+  const response = await fetch('https://api.taxi4u.cab/api/auth/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      user: TAXI4U_USERNAME,
-      password: TAXI4U_PASSWORD,
-      centralcode: TAXI4U_CENTRAL_CODE
+      userId: TAXI4U_USERNAME,
+      password: TAXI4U_PASSWORD
     })
   });
 
@@ -34,14 +33,15 @@ async function fetchToken() {
 
   const data = await response.json();
 
-  if (!data || !data.token) {
-    throw new Error('No token received from authentication API');
+  if (!data || !data.accessToken) {
+    throw new Error('No access token received from authentication API');
   }
 
   // Cache token for 50 minutes (tokens typically expire after 60 minutes)
   const expiresAt = Date.now() + (50 * 60 * 1000);
   tokenCache = {
-    token: data.token,
+    token: data.accessToken,
+    refreshToken: data.refreshToken,
     expiresAt: expiresAt
   };
 
