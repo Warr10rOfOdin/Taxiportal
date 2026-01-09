@@ -67,10 +67,12 @@ module.exports = async (req, res) => {
     res.status(200).json(tripsData);
   } catch (error) {
     console.error('Trips error:', error.message);
+    console.error('Full error:', error);
 
     res.status(500).json({
       error: 'Failed to fetch trips',
       message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
       items: []
     });
   }
