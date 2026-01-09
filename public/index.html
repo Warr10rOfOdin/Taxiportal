@@ -329,7 +329,7 @@
 
         function checkForNotifications(bookings) {
             const underSendingBookings = bookings.filter(b =>
-                b.tripStatus === 'UnderSending'
+                b.tripStatus && b.tripStatus === 'UnderSending'
             );
 
             // Play chime for Under Sending bookings every 30 seconds
@@ -351,9 +351,10 @@
         }
 
         function renderBooking(booking) {
-            const statusClass = booking.tripStatus.toLowerCase().replace(/\s+/g, '-');
+            const tripStatus = booking.tripStatus || 'Unknown';
+            const statusClass = tripStatus.toLowerCase().replace(/\s+/g, '-');
             const urgentClass = isUrgent(booking.pickupTime) ? 'urgent' : '';
-            const underSendingClass = booking.tripStatus === 'UnderSending' ? 'under-sending' : '';
+            const underSendingClass = tripStatus === 'UnderSending' ? 'under-sending' : '';
 
             const passengers = booking.passengers || [];
             const passengersHtml = passengers.length > 0 ? `
@@ -378,7 +379,7 @@
                     </div>
 
                     <div class="status ${statusClass}">
-                        ${mapTripStatus(booking.tripStatus)}
+                        ${mapTripStatus(tripStatus)}
                     </div>
 
                     <div class="booking-details">
