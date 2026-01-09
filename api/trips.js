@@ -5,15 +5,13 @@ const { getValidToken } = require('./auth');
 
 async function fetchTrips(token) {
   const { TAXI4U_CENTRAL_CODE } = process.env;
+  const centralCode = TAXI4U_CENTRAL_CODE || 'VS';
 
-  const now = new Date();
-
-  // Use the documented /api/triplists endpoint for pending trips
+  // Try the triplists endpoint with minimal parameters
+  // The exact schema is not documented, so we'll try different formats
   const requestBody = {
-    centralCode: TAXI4U_CENTRAL_CODE || 'VS',
-    listType: 'pending', // Get pending/active trips
-    fromTime: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(),
-    toTime: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString()
+    CentralCode: centralCode,
+    ListType: 0 // 0 = Pending/Active trips
   };
 
   console.log('Fetching trips with body:', JSON.stringify(requestBody, null, 2));
@@ -29,15 +27,16 @@ async function fetchTrips(token) {
 
   if (!response.ok) {
     const errorText = await response.text();
+    console.error('API error response:', errorText);
     throw new Error(`Failed to fetch trips: ${response.status} ${errorText}`);
   }
 
   const data = await response.json();
-  console.log(`Fetched trips from API`);
+  console.log(`Fetched trips from API, response type: ${Array.isArray(data) ? 'array' : 'object'}`);
 
   // Normalize response to match expected format
   return {
-    items: Array.isArray(data) ? data : (data.items || [])
+    items: Array.isArray(data) ? data : (data.items || data.trips || data.list || [])
   };
 }
 
