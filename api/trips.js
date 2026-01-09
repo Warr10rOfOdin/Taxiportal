@@ -7,14 +7,15 @@ async function fetchTrips(token) {
   const { TAXI4U_CENTRAL_CODE } = process.env;
   const centralCode = TAXI4U_CENTRAL_CODE || 'VS';
 
+  // Mode 1 = Upcoming trips (confirmed by Taxi4U support: "kommende turer")
+  // Mode 2 = Finished trips ("ferdige turer")
   const now = new Date();
-  const minPickupTime = new Date(now.getTime() - 1 * 60 * 60 * 1000); // 1 hour ago
+  const minPickupTime = new Date(now.getTime() - 2 * 60 * 60 * 1000); // 2 hours ago
   const maxPickupTime = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours ahead
 
-  // Try mode 2 (Search) instead - it might be the one that returns active bookings
   const requestBody = {
     centralCode: centralCode,
-    mode: 2, // Mode 2 for search/query
+    mode: 1, // Mode 1 for upcoming trips (per Taxi4U support)
     objValues: {
       minPickupTime: minPickupTime.toISOString(),
       maxPickupTime: maxPickupTime.toISOString()
