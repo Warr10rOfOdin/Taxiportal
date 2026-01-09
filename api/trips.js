@@ -11,12 +11,14 @@ async function fetchTrips(token) {
   const minPickupTime = new Date(now.getTime() - 1 * 60 * 60 * 1000); // 1 hour ago
   const maxPickupTime = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours ahead
 
-  // Use correct schema from Swagger documentation
-  // Mode 0 = Pending trips, Mode 1 = Finished trips, Mode 2 = Search
+  // Try mode 2 (Search) instead - it might be the one that returns active bookings
   const requestBody = {
     centralCode: centralCode,
-    mode: 0, // Mode 0 for pending/active trips
-    objValues: {}  // Mode 0 might not need time filters
+    mode: 2, // Mode 2 for search/query
+    objValues: {
+      minPickupTime: minPickupTime.toISOString(),
+      maxPickupTime: maxPickupTime.toISOString()
+    }
   };
 
   console.log('Fetching trips with body:', JSON.stringify(requestBody, null, 2));
