@@ -71,6 +71,7 @@ async function getValidToken() {
   return await fetchToken();
 }
 
+// Export the token management functions for use in other API routes
 module.exports = async (req, res) => {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -98,3 +99,6 @@ module.exports = async (req, res) => {
     });
   }
 };
+
+// Export the getValidToken function for use by other API routes
+module.exports.getValidToken = getValidToken;
