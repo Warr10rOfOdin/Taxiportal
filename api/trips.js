@@ -7,11 +7,18 @@ async function fetchTrips(token) {
   const { TAXI4U_CENTRAL_CODE } = process.env;
   const centralCode = TAXI4U_CENTRAL_CODE || 'VS';
 
-  // Try the triplists endpoint with minimal parameters
-  // The exact schema is not documented, so we'll try different formats
+  const now = new Date();
+  const minPickupTime = new Date(now.getTime() - 1 * 60 * 60 * 1000); // 1 hour ago
+  const maxPickupTime = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours ahead
+
+  // Use correct schema from Swagger documentation
   const requestBody = {
-    CentralCode: centralCode,
-    ListType: 0 // 0 = Pending/Active trips
+    centralCode: centralCode,
+    mode: 1, // Mode 1 for pending/active trips
+    objValues: {
+      minPickupTime: minPickupTime.toISOString(),
+      maxPickupTime: maxPickupTime.toISOString()
+    }
   };
 
   console.log('Fetching trips with body:', JSON.stringify(requestBody, null, 2));
@@ -32,11 +39,35 @@ async function fetchTrips(token) {
   }
 
   const data = await response.json();
-  console.log(`Fetched trips from API, response type: ${Array.isArray(data) ? 'array' : 'object'}`);
+  console.log(`Fetched ${Array.isArray(data) ? data.length : 0} trips from API`);
 
-  // Normalize response to match expected format
+  // Transform API response to match frontend expectations
+  const trips = Array.isArray(data) ? data : [];
+  const transformedTrips = trips.map(trip => {
+    // Get first passenger for address info (most trips have one passenger)
+    const firstPassenger = trip.passengers && trip.passengers[0];
+
+    return {
+      ...trip,
+      // Add computed fields for frontend
+      pickupAddress: firstPassenger
+        ? `${firstPassenger.fromStreet || ''}, ${firstPassenger.fromCity || ''}`.trim()
+        : '',
+      dropoffAddress: firstPassenger
+        ? `${firstPassenger.toStreet || ''}, ${firstPassenger.toCity || ''}`.trim()
+        : '',
+      comment: trip.messageToCar || '',
+      // Transform passenger fields to match frontend
+      passengers: (trip.passengers || []).map(p => ({
+        ...p,
+        name: p.clientName,
+        phoneNo: p.tel
+      }))
+    };
+  });
+
   return {
-    items: Array.isArray(data) ? data : (data.items || data.trips || data.list || [])
+    items: transformedTrips
   };
 }
 
