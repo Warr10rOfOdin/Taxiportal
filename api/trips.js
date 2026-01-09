@@ -7,11 +7,19 @@ async function fetchTrips(token) {
   const { TAXI4U_CENTRAL_CODE } = process.env;
   const centralCode = TAXI4U_CENTRAL_CODE || 'VS';
 
-  // Try mode 2 with no time filters to get ALL active trips
+  // Mode 1 = Upcoming trips (confirmed by Taxi4U support: "kommende turer")
+  // Mode 2 = Finished trips ("ferdige turer")
+  const now = new Date();
+  const minPickupTime = new Date(now.getTime() - 2 * 60 * 60 * 1000); // 2 hours ago
+  const maxPickupTime = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours ahead
+
   const requestBody = {
     centralCode: centralCode,
-    mode: 2, // Mode 2 for search/query
-    objValues: {}  // No filters - get everything
+    mode: 1, // Mode 1 for upcoming trips (per Taxi4U support)
+    objValues: {
+      minPickupTime: minPickupTime.toISOString(),
+      maxPickupTime: maxPickupTime.toISOString()
+    }
   };
 
   console.log('Fetching trips with body:', JSON.stringify(requestBody, null, 2));
